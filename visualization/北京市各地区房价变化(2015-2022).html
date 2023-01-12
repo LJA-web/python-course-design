@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>北京市各地区房价变化(2015-2022)</title>
+	<script src="./js/echarts.min.js"></script>
+	<script src="./js/jquery.min.js"></script>
+</head>
+
+<body>
+	<div id="main" style="width: 1500px;height: 700px;"></div>
+
+	<script>
+		var chartDom = document.getElementById('main');
+		var myChart = echarts.init(chartDom);
+		var option;
+
+		$.get(
+			'json/broken_line(clean).json',
+			function (_rawData) {
+				run(_rawData);
+			}
+		);
+		
+		function run(_rawData) {
+			var countries = [
+				'东城',
+				'燕郊',
+				'朝阳',
+				'海淀',
+				'石景山',
+				'丰台',
+				'门头沟',
+				'大兴',
+				'昌平',
+				'通州',
+				'顺义',
+				'平谷',
+				'房山',
+				'怀柔',
+				'密云',
+				'延庆',
+				'西城',
+				'旅居',
+				'北京周边'
+			];
+			const datasetWithFilters = [];
+			const seriesList = [];
+			echarts.util.each(countries, function (block) {
+				var datasetId = 'dataset_' + block;
+				datasetWithFilters.push({
+					id: datasetId,
+					fromDatasetId: 'dataset_raw',
+					transform: {
+						type: 'filter',
+						config: {
+							and: [
+								{ dimension: 'Month', gte: 201501 },
+								{ dimension: 'Block', '=': block }
+							]
+						}
+					}
+				});
+				seriesList.push({
+					type: 'line',
+					datasetId: datasetId,
+					showSymbol: false,
+					name: block,
+					endLabel: {
+						show: true,
+						formatter: function (params) {
+							return params.value[3] + ': ' + params.value[0];
+						}
+					},
+					labelLayout: {
+						moveOverlap: 'shiftY'
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					encode: {
+						x: 'Month',
+						y: 'Price',
+						label: ['Block', 'Price'],
+						itemName: 'Month',
+						tooltip: ['Price']
+					}
+				});
+			});
+			option = {
+				animationDuration: 10000,
+				dataset: [
+					{
+						id: 'dataset_raw',
+						source: _rawData
+					},
+					...datasetWithFilters
+				],
+				title: {
+					text: 'Housing Prices By Region in Beijing Since 2015'
+				},
+				tooltip: {
+					order: 'valueDesc',
+					trigger: 'axis'
+				},
+				xAxis: {
+					type: 'category',
+					nameLocation: 'middle'
+				},
+				yAxis: {
+					name: 'Price'
+				},
+				grid: {
+					right: 140
+				},
+				series: seriesList
+			};
+			myChart.setOption(option);
+		}
+
+		option && myChart.setOption(option);
+
+	</script>
+</body>
+
+</html>

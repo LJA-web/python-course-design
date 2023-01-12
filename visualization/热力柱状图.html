@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <title>热力柱状图</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map_container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+    <script src="//api.map.baidu.com/api?v=1.0&type=webgl&ak=qLEKdxXyvgBafdBUo9akcpc62EIe4c9w"></script>
+    <script src="//mapv.baidu.com/build/mapv.min.js"></script>
+    <script src="./js/common.min.js"></script>
+    <script src="https://unpkg.com/mapvgl@1.0.0-beta.168/dist/mapvgl.min.js"></script>
+</head>
+
+<body>
+    <div id="map_container"></div>
+    <script>
+        /* global BMapGL */
+
+        /* global mapv */
+
+        /* global mapvgl */
+
+        /* global initMap */
+        var map = initMap({
+            // tilt: 60,
+            heading: 30,
+            center: [116.387456, 39.925406],
+            zoom: 12,
+            style: [],
+            skyColors: [
+                // 地面颜色
+                'rgba(226, 237, 248, 0)',
+                // 天空颜色
+                'rgba(186, 211, 252, 1)'
+            ]
+        });
+
+
+        var view = new mapvgl.View({
+            /* 
+            effects: [new mapvgl.BloomEffect({
+                blurSize: 3
+            })],
+            */
+            map: map
+        });
+
+        var grid = new mapvgl.HeatGridLayer({
+            max: 100, // 最大阈值
+            min: 10, // 最小阈值
+            // color: function() {
+            //     return 'rgb(200, 255, 0)';
+            // },
+            gridSize: 500,  // 网格大小
+            // style: 'normal',
+            gradient: { // 对应比例渐变色
+                0: '#ff7473',
+                0.3: '#47b8e0',
+                1: '#34314c'
+            },
+            // textOptions: {
+            //     show: true,
+            //     color: '#f00'
+            // },
+            riseTime: 2000, // 楼块初始化升起时间
+            maxHeight: 12000, // 最大高度
+            minHeight: 2000 // 最小高度
+        });
+        view.addLayer(grid);
+
+        fetch('json/beijing_heat_bar.json').then(rs => {
+            return rs.json();
+        }).then(rs => {
+            rs = rs.result.data[0].bound;
+            var data = [];
+            for (var i = 0; i < rs.length; i++) {
+                var item = rs[i];
+                data.push({
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [item[0], item[1]]
+                    },
+                    properties: {
+                        count: item[2]
+                    }
+                });
+            }
+            grid.setData(data);
+
+            // setTimeout(() => {
+            //     grid.setOptions({
+            //         gridSize: 100
+            //     });
+            // }, 5000);
+        });
+    </script>
+</body>
+
+</html>
